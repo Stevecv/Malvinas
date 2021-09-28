@@ -1,7 +1,7 @@
 {
   "name": "M16",
   "muzzleVelocity": "960",
-  "Range": "",
+  "range": "3600",
   "effectiveFiringRange": "550",
   "roundsPerMin": "45"
 }

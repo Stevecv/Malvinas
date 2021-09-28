@@ -15,7 +15,7 @@ public class RightClick implements Listener {
     }
 
     @EventHandler
-    public void rightClick(PlayerInteractEvent e) {
+    public void rightClick(PlayerInteractEvent e) throws Exception {
         Player p = e.getPlayer();
         ItemStack heldItem = p.getItemInHand();
 

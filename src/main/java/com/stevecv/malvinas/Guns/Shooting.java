@@ -1,5 +1,6 @@
 package com.stevecv.malvinas.Guns;
 
+import com.stevecv.malvinas.Guns.gunData.ReadData;
 import com.stevecv.malvinas.Main;
 import org.bukkit.*;
 import org.bukkit.entity.LivingEntity;
@@ -15,12 +16,16 @@ public class Shooting {
         this.main = main;
     }
 
-    public void shoot(Player p) {
+    public void shoot(Player p) throws Exception {
         p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 3f, 3f);
 
-        double vel = 744;
-        double range = 2000;
-        double effectiveFiringRange = 500;
+        String gunName = p.getItemInHand().getItemMeta().getDisplayName();
+
+        ReadData rd = new ReadData();
+
+        double vel = (double) rd.readJson("src/main/java/com/stevecv/malvinas/Guns/gunData/" + gunName + ".json", "muzzleVelocity");
+        double range = (double) rd.readJson("src/main/java/com/stevecv/malvinas/Guns/gunData/" + gunName + ".json", "range");
+        double effectiveFiringRange = (double) rd.readJson("src/main/java/com/stevecv/malvinas/Guns/gunData/" + gunName + ".json", "effectiveFiringRange");
 
         double footNumber = 3.281;
 
