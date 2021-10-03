@@ -2,9 +2,14 @@ package com.stevecv.malvinas.Guns;
 
 import com.stevecv.malvinas.Guns.gunData.ReadData;
 import com.stevecv.malvinas.Main;
-import org.bukkit.*;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
@@ -16,21 +21,44 @@ public class Shooting {
         this.main = main;
     }
 
-    public void shoot(Player p) throws Exception {
-        p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 3f, 3f);
-
-        String gunName = p.getItemInHand().getItemMeta().getDisplayName();
-
+    public void shoot(Player p, ItemStack item) throws Exception {
         ReadData rd = new ReadData();
 
-        double vel = (double) rd.readJson("src/main/java/com/stevecv/malvinas/Guns/gunData/" + gunName + ".json", "muzzleVelocity");
-        double range = (double) rd.readJson("src/main/java/com/stevecv/malvinas/Guns/gunData/" + gunName + ".json", "range");
-        double effectiveFiringRange = (double) rd.readJson("src/main/java/com/stevecv/malvinas/Guns/gunData/" + gunName + ".json", "effectiveFiringRange");
+        String gunName = item.getItemMeta().getDisplayName();
+
+        double maxMagSize = Double.parseDouble((String) rd.readJson("plugins/Malvinas/Guns/" + gunName + ".json", "magSize"));
+        if (item.getLore() == null) {
+            ArrayList<String> lore = new ArrayList<>();
+            lore.add(maxMagSize + "/" + maxMagSize);
+
+            item.setLore(lore);
+        }
+        String bulletsS = item.getLore().get(0).split("/")[0];
+        double bullets = Double.parseDouble(bulletsS);
+
+        bullets = bullets-1;
+
+        if (bullets <= 0.0) {
+            p.playSound(p.getLocation(), Sound.BLOCK_STONE_BUTTON_CLICK_ON, 3f, 3f);
+            return;
+        }
+
+        ArrayList<String> lore = new ArrayList<>();
+        lore.add(bullets + "/" + maxMagSize);
+
+        item.setLore(lore);
+
+
+
+        p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 3f, 3f);
+
+        double vel = Double.parseDouble((String) rd.readJson("plugins/Malvinas/Guns/" + gunName + ".json", "muzzleVelocity"));
+        double range = Double.parseDouble((String) rd.readJson("plugins/Malvinas/Guns/" + gunName + ".json", "range"));
+        double effectiveFiringRange = Double.parseDouble((String) rd.readJson("plugins/Malvinas/Guns/" + gunName + ".json", "effectiveFiringRange"));
 
         double footNumber = 3.281;
 
         //Smoke
-
         Location origin = p.getEyeLocation();
         Vector direction = origin.getDirection();
         direction.multiply(range);
@@ -61,14 +89,19 @@ public class Shooting {
 
             double S;
             double middleCalc = Math.pow(0.5 * 32 * (vel / i), 2);
-            if (loc.getBlock().getType() == Material.WATER) {
+            Block b = loc.getBlock();
+            Material type = b.getType();
+            if (type == Material.WATER) {
                 S = 8 / middleCalc/footNumber;
-            } else if (loc.getBlock().getType() == Material.GLASS) {
+            } else if (type == Material.GLASS) {
                 S = 4 /middleCalc/footNumber;
                 loc.getBlock().setType(Material.AIR);
-            } else if (loc.getBlock().getType() == Material.AIR) {
+            } else if (type == Material.GLASS_PANE) {
+                S = 3 /middleCalc/footNumber;
+                loc.getBlock().setType(Material.AIR);
+            } else if (type == Material.AIR) {
                 S = middleCalc/footNumber;
-            } else if (loc.getBlock().getType() == Material.GRASS || loc.getBlock().getType() == Material.TALL_GRASS) {
+            } else if (type == Material.GRASS || loc.getBlock().getType() == Material.TALL_GRASS) {
                 S = 2 /middleCalc/footNumber;
             } else {
                 break;
@@ -81,7 +114,6 @@ public class Shooting {
                     if (e.getHealth()-damageAmount < 0) {
                         damageAmount = e.getHealth();
                     }
-                    Bukkit.broadcastMessage(String.valueOf(e.getHealth()-damageAmount));
 
                     e.setHealth(e.getHealth() - damageAmount);
                 }
