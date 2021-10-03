@@ -1,5 +1,6 @@
 package com.stevecv.malvinas.Guns;
 
+import com.stevecv.malvinas.Guns.gunData.Converter;
 import com.stevecv.malvinas.Guns.gunData.ReadData;
 import com.stevecv.malvinas.Main;
 import org.bukkit.Location;
@@ -10,6 +11,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
@@ -23,8 +25,14 @@ public class Shooting {
 
     public void shoot(Player p, ItemStack item) throws Exception {
         ReadData rd = new ReadData();
-
         String gunName = item.getItemMeta().getDisplayName();
+        DataHandling dh = new DataHandling(main);
+
+        double rpm = Double.parseDouble((String) rd.readJson("plugins/Malvinas/Guns/" + gunName + ".json", "roundsPerMin"));
+
+        double now = System.currentTimeMillis();
+        if (!(now-dh.readDataDouble(p, "lastShotTime", new Converter().rpmToSpaceMs(rpm)) >= new Converter().rpmToSpaceMs(rpm))) { return; }
+        dh.saveData(p, PersistentDataType.DOUBLE, "lastShotTime", now);
 
         double maxMagSize = Double.parseDouble((String) rd.readJson("plugins/Malvinas/Guns/" + gunName + ".json", "magSize"));
         if (item.getLore() == null) {
@@ -57,6 +65,10 @@ public class Shooting {
         double effectiveFiringRange = Double.parseDouble((String) rd.readJson("plugins/Malvinas/Guns/" + gunName + ".json", "effectiveFiringRange"));
 
         double footNumber = 3.281;
+
+        if (range > 1500.0) {
+            range = 1500.0;
+        }
 
         //Smoke
         Location origin = p.getEyeLocation();

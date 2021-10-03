@@ -1,6 +1,7 @@
 package com.stevecv.malvinas.Guns;
 
 import com.stevecv.malvinas.Guns.gunData.ReadData;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -20,27 +21,32 @@ public class Reload implements Listener {
         Action a = e.getAction();
         Player p = e.getPlayer();
         if (a == Action.LEFT_CLICK_AIR || a == Action.LEFT_CLICK_BLOCK) {
+
             ItemStack gun = e.getItem();
 
             ReadData rd = new ReadData();
+            assert gun != null;
             String gunName = gun.getItemMeta().getDisplayName();
+            if (gunName == null) { return; }
 
             double maxMagSize = Double.parseDouble((String) rd.readJson("plugins/Malvinas/Guns/" + gunName + ".json", "magSize"));
             String magName = (String) rd.readJson("plugins/Malvinas/Guns/" + gunName + ".json", "magName");
 
-            ItemStack item = new ItemStack(Material.MAGMA_CREAM);
-            ItemMeta meta = item.getItemMeta();
-            meta.setLocalizedName(magName);
-            item.setItemMeta(meta);
+            for(ItemStack i: p.getInventory().getContents()) {
+                if (i.getType() == Material.MAGMA_CREAM) {
+                    if (i.getItemMeta().getDisplayName().equals(magName)) {
+                        i.setAmount(i.getAmount() - 1);
 
-            Inventory inv = p.getInventory();
-            if (!inv.contains(item)) { return; }
-            inv.remove(item);
+                        break;
+                    }
+                }
+            }
+            //Remove mag
 
             ArrayList<String> lore = new ArrayList<>();
             lore.add(maxMagSize + "/" + maxMagSize);
 
-            item.setLore(lore);
+            gun.setLore(lore);
 
             p.playSound(p.getLocation(), Sound.BLOCK_STONE_BUTTON_CLICK_OFF, 3f, 3f);
         }
